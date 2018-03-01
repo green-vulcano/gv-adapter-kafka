@@ -58,7 +58,7 @@ public class KafkaPublishCallOperation implements CallOperation {
     private String partitionKey = null;
     private String partitionNumber = null;
     private String message = null;
-    
+    private boolean logDump = false;
     private boolean waitResult = false;
     
     @Override
@@ -71,6 +71,7 @@ public class KafkaPublishCallOperation implements CallOperation {
         	topic = Optional.ofNullable(XMLConfig.get(node, "@topic"))
         			        .orElseThrow(() -> new IllegalArgumentException("Missing configuration entry: topic"));
         	
+        	logDump = Boolean.valueOf(XMLConfig.get(node, "@log", "false" ));
         	waitResult = Boolean.valueOf(XMLConfig.get(node, "@sync", "false" ));
         	
         	Node messageNode = Optional.ofNullable(XMLConfig.getNode(node, "./message"))
@@ -107,6 +108,10 @@ public class KafkaPublishCallOperation implements CallOperation {
         	
         	  ProducerRecord<String, String> record = new ProducerRecord<String, String>(actualTopic, partition, key,  actualMessage);
         	  
+        	  if (logDump) {
+        		  logger.debug("GV ESB Kafka plugin module - sending record: "+record.toString());  
+        	  }
+        	          	  
         	  Future<RecordMetadata> sendResult = producer.send(record);
         	  
         	  if (waitResult) {

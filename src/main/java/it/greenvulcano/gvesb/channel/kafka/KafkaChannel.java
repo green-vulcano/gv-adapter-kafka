@@ -10,7 +10,6 @@ import java.util.stream.IntStream;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +51,9 @@ public class KafkaChannel {
 	}
 	
 	static void tearDown() {
+		LOG.debug("Finalizing GV ESB Kafka plugin module");
 		producers.values().stream().forEach(Producer::close);
+		producers.clear();
 	}
 	
 	private static void buildProducer(Node producerNode) {

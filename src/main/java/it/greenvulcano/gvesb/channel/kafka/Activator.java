@@ -21,24 +21,47 @@ package it.greenvulcano.gvesb.channel.kafka;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import it.greenvulcano.configuration.ConfigurationEvent;
+import it.greenvulcano.configuration.ConfigurationListener;
+import it.greenvulcano.configuration.XMLConfig;
+import it.greenvulcano.gvesb.core.config.GreenVulcanoConfig;
 import it.greenvulcano.gvesb.virtual.OperationFactory;
 import it.greenvulcano.gvesb.virtual.kafka.KafkaPublishCallOperation;
 
 public class Activator implements BundleActivator {
+	private final static Logger LOG = LoggerFactory.getLogger(Activator.class);
+	
+	private final static ConfigurationListener configurationListener = event-> {
+		
+		LOG.debug("GV ESB Kafka plugin module - handling configuration event");
+		
+		if ((event.getCode() == ConfigurationEvent.EVT_FILE_REMOVED) && event.getFile().equals(GreenVulcanoConfig.getSystemsConfigFileName())) {
+			KafkaChannel.tearDown();
+		}
+		
+		if ((event.getCode() == ConfigurationEvent.EVT_FILE_LOADED) && event.getFile().equals(GreenVulcanoConfig.getSystemsConfigFileName())) {
+			KafkaChannel.setUp();
+		}
+	};
 
 	@Override
 	public void start(BundleContext context) throws Exception {
 		OperationFactory.registerSupplier("kafka-publish-call", KafkaPublishCallOperation::new);
 		KafkaChannel.setUp();
+		
+		XMLConfig.addConfigurationListener(configurationListener, GreenVulcanoConfig.getSystemsConfigFileName());
 
 	}
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
 		
-		KafkaChannel.tearDown();		
-		OperationFactory.unregisterSupplier("kafka-publish-call");
+		XMLConfig.removeConfigurationListener(configurationListener);		
+		KafkaChannel.tearDown();
+		OperationFactory.unregisterSupplier("kafka-publish-call");	
 
 	}
 
