@@ -1,14 +1,14 @@
 # gv-adapter-kafka
-## GV ESB v4 adapter for Apache Kafka
+### GV ESB v4 adapter for Apache Kafka
 
 Support Apache Kafka integration providing `kafka-publish-call` to send message on Kafka topic.
 
-### Required attributes
+#### Required attributes
  - **name**
  - **type** (=call)
  - **topic** 
 
-### Optional attributes 
+#### Optional attributes 
  - **config** _path of kafka producer properties file_
  - **sync** _whether call operation must wait for brokers ACK_
  - **key**
