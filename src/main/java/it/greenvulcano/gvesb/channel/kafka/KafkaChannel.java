@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +20,14 @@ import org.w3c.dom.NodeList;
 import it.greenvulcano.configuration.XMLConfig;
 import it.greenvulcano.configuration.XMLConfigException;
 import it.greenvulcano.gvesb.core.config.GreenVulcanoConfig;
+import it.greenvulcano.util.metadata.PropertiesHandler;
 import it.greenvulcano.util.xpath.XPathFinder;
 
 public class KafkaChannel {
 	
 	private final static Logger LOG = LoggerFactory.getLogger(KafkaChannel.class);
 	
-	private final static ConcurrentMap<String, Producer<String,String>> producers = new ConcurrentHashMap<>();
+	private final static ConcurrentMap<String, Producer<String,byte[]>> producers = new ConcurrentHashMap<>();
 		
 	static void setUp() {
 		
@@ -64,9 +66,9 @@ public class KafkaChannel {
 			 String system = XMLConfig.get(producerNode.getParentNode().getParentNode(), "@id-system");
 			 			
 			 String endpoint = XMLConfig.get(producerNode.getParentNode(), "@endpoint");
-	   		 String config = XMLConfig.get(producerNode, "@config");
+	   		 String config =  PropertiesHandler.expand(XMLConfig.get(producerNode, "@config"));
 	   		 String name = XMLConfig.get(producerNode, "@name");
-	   		 
+	   			   		 
 	   		 LOG.debug(String.format("Configuring producer %s in channel %s - system %s", name, channel, system));
 	   		 
 	   		 Properties props = new Properties();
@@ -77,9 +79,9 @@ public class KafkaChannel {
 	   		 
 	   		 props.put("bootstrap.servers", endpoint);
 	   		 props.put("key.serializer", StringSerializer.class);
-	   		 props.put("value.serializer", StringSerializer.class);
+	   		 props.put("value.serializer", ByteArraySerializer.class);
 	   		 
-	   		 Producer<String, String> producer = new KafkaProducer<>(props);
+	   		 Producer<String, byte[]> producer = new KafkaProducer<>(props);
 	   		
 	   		 String producerKey = XPathFinder.buildXPath(producerNode);
 	   		 
@@ -95,7 +97,7 @@ public class KafkaChannel {
    	 
 	}	
 	
-	public static Producer<String, String> getProducer(Node operationNode){		
+	public static Producer<String, byte[]> getProducer(Node operationNode){		
 		String producerKey = XPathFinder.buildXPath(operationNode);		
 		return producers.get(producerKey);
 	}	

@@ -31,6 +31,11 @@ import it.greenvulcano.gvesb.virtual.InvalidDataException;
 import it.greenvulcano.gvesb.virtual.OperationKey;
 import it.greenvulcano.util.metadata.PropertiesHandler;
 import it.greenvulcano.util.metadata.PropertiesHandlerException;
+
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Future;
@@ -50,20 +55,22 @@ import org.w3c.dom.Node;
 public class KafkaPublishCallOperation implements CallOperation {
     
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(KafkaPublishCallOperation.class);    
+    private static final String HEADER_TAG = "KAKFA_HEADER_";
+    
     private OperationKey key = null;
     
-    private Producer<String, String> producer;
+    private Producer<String, byte[]> producer;
        
     private String topic = null;
     private String partitionKey = null;
     private String partitionNumber = null;
-    private String message = null;
+    
     private boolean logDump = false;
     private boolean waitResult = false;
     
     @Override
     public void init(Node node) throws InitializationException  {
-        logger.debug("Init start");
+       
         try {
         	producer = Optional.ofNullable(KafkaChannel.getProducer(node))
         			           .orElseThrow(() -> new IllegalArgumentException("Failed to retrieve Producer instance"));
@@ -73,15 +80,9 @@ public class KafkaPublishCallOperation implements CallOperation {
         	
         	logDump = Boolean.valueOf(XMLConfig.get(node, "@log", "false" ));
         	waitResult = Boolean.valueOf(XMLConfig.get(node, "@sync", "false" ));
-        	
-        	Node messageNode = Optional.ofNullable(XMLConfig.getNode(node, "./message"))
-        			                   .orElseThrow(() -> new IllegalArgumentException("Missing configuration node: message"));
-        	
-            partitionKey = XMLConfig.get(messageNode, "@key");
-            partitionNumber = XMLConfig.get(messageNode, "@partition");
-        	message =  Optional.ofNullable(messageNode.getTextContent())
-        			           .orElseThrow(() -> new IllegalArgumentException("Missing configuration content: payload"));
-        	        	         	
+        	        	       	
+            partitionKey = XMLConfig.get(node, "@key");
+            partitionNumber = XMLConfig.get(node, "@partition");           	         	
               
         	     
         } catch (Exception exc) {
@@ -100,13 +101,46 @@ public class KafkaPublishCallOperation implements CallOperation {
         	
         	  Map<String, Object> params  = GVBufferPropertiesHelper.getPropertiesMapSO(gvBuffer, true);
         	
-        	  String actualTopic = expand(topic, params, gvBuffer.getObject()); 
-        	  String actualMessage = expand(message, params, gvBuffer.getObject());
-        	  
-        	  String key = expand(partitionKey, params, gvBuffer.getObject());
-        	  Integer partition = partitionNumber!=null ? Integer.valueOf(expand(partitionNumber, params, gvBuffer.getObject())): null;
+        	  String actualTopic = expand(topic, params); 
+        	        	  
+        	  String key = expand(partitionKey, params);
+        	  Integer partition = partitionNumber!=null ? Integer.valueOf(expand(partitionNumber, params)): null;
         	
-        	  ProducerRecord<String, String> record = new ProducerRecord<String, String>(actualTopic, partition, key,  actualMessage);
+        	  byte[] message = new byte[] {};
+        	  if (gvBuffer.getObject() != null) {        		 
+        		  
+        		  if (gvBuffer.getObject() instanceof byte[]) {
+        			  message = (byte[]) gvBuffer.getObject();
+        		  } else if (gvBuffer.getObject() instanceof String) {
+        			  
+        			  String charset = Optional.ofNullable(gvBuffer.getProperty("OBJECT_ENCODING")).orElse("UTF-8");        			  
+        			  message = gvBuffer.getObject().toString().getBytes(charset);
+        			  
+        		  } else {
+        		         		  
+	        		  try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+	        			  
+	        			  ObjectOutput objectOutput = new ObjectOutputStream(outputStream);
+	        			  objectOutput.writeObject(gvBuffer.getObject());
+	        			  objectOutput.flush();
+	        			  
+	        			  message = outputStream.toByteArray(); 
+	        		  }
+        		  }
+        	  }
+        	  
+        	  logger.debug("Sending message on topic "+actualTopic
+        			       + (partition!=null? " partition "+partition: "")
+        			       + (key!=null? " key "+key: ""));
+        	  ProducerRecord<String, byte[]> record = new ProducerRecord<>(actualTopic, partition, key,  message);
+        	  
+        	  
+        	  gvBuffer.getPropertyNamesSet()
+        	          .stream()
+        	          .filter(k->k.matches("^"+HEADER_TAG+".*"))
+        	          .map(k->k.substring(HEADER_TAG.length()))
+        	          .forEach(k-> record.headers().add(k, gvBuffer.getProperty(HEADER_TAG.concat(k)).getBytes(StandardCharsets.UTF_8)));       	  
+        	  
         	  
         	  if (logDump) {
         		  logger.debug("GV ESB Kafka plugin module - sending record: "+record.toString());  
@@ -157,8 +191,8 @@ public class KafkaPublishCallOperation implements CallOperation {
         return key;
     }
     
-    private String expand(String entry, Map<String, Object> params, Object object) throws PropertiesHandlerException {
-    	String actualEntry = PropertiesHandler.isExpanded(entry)? entry :  PropertiesHandler.expand(entry, params, object);
+    private String expand(String entry, Map<String, Object> params) throws PropertiesHandlerException {
+    	String actualEntry = PropertiesHandler.isExpanded(entry)? entry :  PropertiesHandler.expand(entry, params);
     	
   	    if (!PropertiesHandler.isExpanded(actualEntry)) {  	    	
   	    	throw new IllegalArgumentException("Failed to expand value: "+entry);
