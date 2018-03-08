@@ -3,6 +3,17 @@
 
 Support Apache Kafka integration providing `kafka-publish-call` to send message on Kafka topic.
 
+###Required attributes
+ - *name*
+ - *type* (=call)
+ - *topic* 
+
+###Optional attributes 
+ - config _path of kafka producer properties file_
+ - sync _whether call operation must wait for brokers ACK_
+ - key
+ - partition
+
 Here a sample flow:
 
 ```    
@@ -41,9 +52,10 @@ Here a sample flow:
                 <Channel enabled="true"
                          endpoint="localhost:9092,localhost:9093,localhost:9094"
                          id-channel="MessageStream" type="KafkaAdapter">
-                    <kafka-publish-call name="notify" topic="gvevolution" type="call">                                 
-                        <message>@{{*OBJECT}}</message>
-                    </kafka-publish-call>
+                            <kafka-publish-call name="notify" type="call" 
+                                                config="${{gv.app.home}}/kafka.properties" 
+                                                topic="gvevolution" partition="2" key="nodeAlpha" 
+                                                sync="true"/>
                 </Channel>
             </System>
         </Systems>
