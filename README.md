@@ -1,5 +1,5 @@
 # gv-adapter-kafka
-### GV ESB v4 adapter for Apache Kafka
+## GV ESB v4 adapter for Apache Kafka
 
 Support Apache Kafka integration providing `kafka-publish-call` to send message on Kafka topic.
 
@@ -60,5 +60,4 @@ Here a sample flow:
             </System>
         </Systems>
     </GVSystems>
-    
-    ```
+```
