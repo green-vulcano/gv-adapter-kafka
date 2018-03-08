@@ -3,16 +3,16 @@
 
 Support Apache Kafka integration providing `kafka-publish-call` to send message on Kafka topic.
 
-###Required attributes
- - *name*
- - *type* (=call)
- - *topic* 
+### Required attributes
+ - **name**
+ - **type** (=call)
+ - **topic** 
 
-###Optional attributes 
- - config _path of kafka producer properties file_
- - sync _whether call operation must wait for brokers ACK_
- - key
- - partition
+### Optional attributes 
+ - **config** _path of kafka producer properties file_
+ - **sync** _whether call operation must wait for brokers ACK_
+ - **key**
+ - **partition**
 
 Here a sample flow:
 
@@ -60,4 +60,5 @@ Here a sample flow:
             </System>
         </Systems>
     </GVSystems>
+    
     ```
