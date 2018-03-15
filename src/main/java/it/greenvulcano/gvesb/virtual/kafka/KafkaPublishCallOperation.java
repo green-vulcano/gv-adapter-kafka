@@ -8,12 +8,12 @@
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * GreenVulcano ESB is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
- *
+ *  
  * You should have received a copy of the GNU Lesser General Public License
  * along with GreenVulcano ESB. If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
@@ -55,8 +55,7 @@ import org.w3c.dom.Node;
 public class KafkaPublishCallOperation implements CallOperation {
     
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(KafkaPublishCallOperation.class);    
-    private static final String HEADER_TAG = "KAKFA_HEADER_";
-    
+        
     private OperationKey key = null;
     
     private Producer<String, byte[]> producer;
@@ -137,9 +136,9 @@ public class KafkaPublishCallOperation implements CallOperation {
         	  
         	  gvBuffer.getPropertyNamesSet()
         	          .stream()
-        	          .filter(k->k.matches("^"+HEADER_TAG+".*"))
-        	          .map(k->k.substring(HEADER_TAG.length()))
-        	          .forEach(k-> record.headers().add(k, gvBuffer.getProperty(HEADER_TAG.concat(k)).getBytes(StandardCharsets.UTF_8)));       	  
+        	          .filter(k->k.matches("^"+KafkaChannel.HEADER_TAG+".*"))
+        	          .map(k->k.substring(KafkaChannel.HEADER_TAG.length()))
+        	          .forEach(k-> record.headers().add(k, gvBuffer.getProperty(KafkaChannel.HEADER_TAG.concat(k)).getBytes(StandardCharsets.UTF_8)));       	  
         	  
         	  
         	  if (logDump) {
