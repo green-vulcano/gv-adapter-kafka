@@ -22,6 +22,7 @@ package it.greenvulcano.gvesb.channel.kafka;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -115,17 +116,18 @@ public class KafkaChannel {
 			consumers.values().stream().forEach(KafkaForward::stop);
 			consumers.clear();
 					
-			
-			try {
-				if (!executorService.awaitTermination(16, TimeUnit.SECONDS)) {
-					executorService.shutdown();
+			if (Objects.nonNull(executorService)) {
+				try {
+					if (!executorService.awaitTermination(16, TimeUnit.SECONDS)) {
+						executorService.shutdown();
+					}
+				} catch (InterruptedException e) {
+					LOG.error("Error terminating consumers task", e);
+					executorService.shutdownNow();
 				}
-			} catch (InterruptedException e) {
-				LOG.error("Error terminating consumers task", e);
-				executorService.shutdownNow();
+				
+				executorService = null;
 			}
-			
-			executorService = null;
 		}
 	}	
 	private static void buildProducer(Node producerNode) {
