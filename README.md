@@ -16,7 +16,7 @@ Support Apache Kafka integration providing `kafka-publish-call` to send message 
 
 Here a sample flow:
 
-```    
+```xml
 <GVServices name="SERVICES" type="module">
         <Groups>
             <Description>This section contains all the service groups.</Description>
@@ -52,10 +52,14 @@ Here a sample flow:
                 <Channel enabled="true"
                          endpoint="localhost:9092,localhost:9093,localhost:9094"
                          id-channel="MessageStream" type="KafkaAdapter">
-                            <kafka-publish-call name="notify" type="call" 
-                                                config="${{gv.app.home}}/kafka.properties" 
-                                                topic="gvevolution" partition="2" key="nodeAlpha" 
-                                                sync="true"/>
+                    <kafka-publish-call name="notify" type="call" 
+                                        config="${{gv.app.home}}/kafka.properties" 
+                                        topic="gvevolution" partition="2" key="nodeAlpha" 
+                                        sync="true"/>
+                    <kafka-subscription-listener name="inbound" group="consumerGroup"
+                                                 service="stream" operation="consume" type="listener">
+                        <topic>gvevolution</topic>
+                    </kafka-subscription-listener>
                 </Channel>
             </System>
         </Systems>
