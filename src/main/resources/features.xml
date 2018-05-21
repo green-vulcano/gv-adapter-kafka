@@ -2,7 +2,7 @@
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.3.0"	name="${project.artifactId}-${project.version}">
 	<repository>mvn:it.greenvulcano.gvesb/gvengine-features/${gvesb.version}/xml/features</repository>	
 		
-	<feature name="gvrestx" description="GreenVulcano REST plugin" version="${project.version}">		  
+	<feature name="gvkafka" description="GreenVulcano plugin for Apache Kafka" version="${project.version}">		  
 				
 		<feature prerequisite="true">gvengine</feature>
 		<bundle start-level="96">mvn:it.greenvulcano.gvesb.adapter/gv-adapter-kafka/${project.version}</bundle>		
