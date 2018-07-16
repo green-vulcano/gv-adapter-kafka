@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   
   <groupId>it.greenvulcano.gvesb.adapter</groupId>
-	<artifactId>gvkafkax</artifactId>
+	<artifactId>gv-adapter-kafka</artifactId>
   	<version>4.0.beta1</version>
 	<packaging>bundle</packaging>
 
